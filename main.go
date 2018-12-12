@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-const SR_URL = "https://www.reddit.com/r/%s/new.json?sort=new"
+const SR_URL = "https://www.reddit.com/%s/new.json?sort=new"
 const R_URL = "https://www.reddit.com/new.json?sort=new"
 
 type RedditPost struct {
@@ -32,17 +32,28 @@ func main() {
 		os.Exit(1)
 	}
 
+	if *subreddit != "reddit" {
+		if !strcheck(*subreddit, "r/") {
+			*subreddit = "/r/" + *subreddit
+		}
+	}
+
 	// call API
 	data := redditData(*subreddit)
-
+	found := 0
 	if data != nil {
 		for _, val := range data {
 			if strcheck(val.Title, *keyword) || strcheck(val.Content, *keyword) {
 				fmt.Printf("Possible Match: %s by %s (%s)\n", val.Title, val.Author, val.URL)
+				found++
 			}
 		}
 	}
-	fmt.Printf("Watching %s for %s", *subreddit, *keyword)
+	if found == 0 {
+		fmt.Printf("No posts found containing %s in %s", *keyword, *subreddit)
+	}
+	// TODO: Run go function every 1 min and display current status
+	// fmt.Printf("Watching %s for %s", *subreddit, *keyword)
 }
 
 func redditData(subreddit string) []*RedditPost {
